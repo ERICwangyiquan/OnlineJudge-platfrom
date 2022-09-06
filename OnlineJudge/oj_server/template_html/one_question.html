@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{number}}.{{title}}</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.2.6/ace.js" type="text/javascript"
+        charset="utf-8"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.2.6/ext-language_tools.js" type="text/javascript"
+        charset="utf-8"></script>
+    <script src="https://code.jquery.com/jquery-2.2.4.min.js"
+        integrity="sha256-BbhdlvQf/xTY9gja0Dq3HiwQF8LaCRTXxZKRutelT44=" crossorigin="anonymous"></script>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+        }
+
+        html,
+        body {
+            width: 100%;
+            height: 100%;
+        }
+
+        .container .navbar {
+            width: 100%;
+            height: 40px;
+            background-color: rgb(230, 230, 230);
+            overflow: hidden;
+        }
+
+        .container .navbar a {
+            display: inline-block;
+            color: black;
+            font-size: large;
+            width: 80px;
+            line-height: 40px;
+            text-decoration: none;
+            text-align: center;
+        }
+
+        .container .navbar a:hover {
+            background-color: rgb(109, 109, 232);
+        }
+
+        .container .navbar .login {
+            float: right;
+        }
+
+        .container .part1 {
+            width: 100%;
+            height: 600px;
+            overflow: hidden;
+        }
+
+        .container .part1 .left_desc {
+            width: 50%;
+            height: 600px;
+            float: left;
+            overflow: scroll;
+        }
+
+        .container .part1 .left_desc h3 {
+            padding-top: 20px;
+            padding-left: 20px;
+        }
+
+        .container .part1 .left_desc pre {
+            padding-top: 20px;
+            padding-left: 20px;
+            font-size: medium;
+            font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+        }
+
+        .container .part1 .right_code {
+            width: 50%;
+            float: right;
+        }
+
+        .container .part1 .right_code .ace_editor {
+            height: 600px;
+        }
+
+        .container .interact {
+            width: 100%;
+            overflow: hidden;
+        }
+
+        .container .interact .result {
+            width: 300px;
+            float: left;
+        }
+
+        .container .interact .btn-submit {
+            width: 100px;
+            height: 50px;
+            font-size: large;
+            float: right;
+            background-color: #26bb9c;
+            color: white;
+            border: 0px;
+            margin-top: 10px;
+            margin-right: 10px;
+        }
+
+        .container .interact .btn-submit:hover {
+            color: green;
+        }
+
+        .container .interact .result {
+            margin-top: 15px;
+            margin-left: 30px;
+        }
+
+        .container .interact .result pre {
+            font-size: large;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="navbar">
+            <a href="/">Home</a>
+            <a href="/all_questions">Problems</a>
+            <a href="/">Contest</a>
+            <a href="/">Discuss</a>
+            <a href="/">Interview</a>
+            <a class="login" href="/">Login</a>
+        </div>
+
+        <div class="part1">
+            <div class="left_desc">
+                <h3><span id="number">{{number}}</span>.{{title}}. {{star}}</h3>
+                <pre>{{desc}}</pre>
+            </div>
+
+            <div class="right_code">
+                <pre id="code" class="ace_editor"><textarea class="ace_text-input">{{pre_code}}</textarea></pre>
+            </div>
+        </div>
+
+        <div class="interact">
+            <div class="result"></div>
+            <button class="btn-submit" onclick="submit()">submit</button>
+        </div>
+    </div>
+
+    <script>
+        //initialize
+        editor = ace.edit("code");
+
+        editor.setTheme("ace/theme/monokai");
+        editor.session.setMode("ace/mode/c_cpp");
+
+        editor.setFontSize(16);
+        editor.getSession().setTabSize(4);
+        // will become read only to display code when it's true
+        editor.setReadOnly(false);
+        // open the menu
+        ace.require("ace/ext/language_tools");
+        editor.setOptions({
+            enableBasicAutocompletion: true,
+            enableSnippets: true,
+            enableLiveAutocompletion: true
+        });
+
+        function submit() {
+            // 1. collect data form this page: 1.question num 2.code
+            var code = editor.getSession().getValue();
+            // console.log(code);
+            var number = $(".container .part1 .left_desc h3 #number").text();  // '$': jQuery instance, '#': id选择器 id_chooser
+            // console.log(number);
+            var judge_url = "/judge/" + number;
+            // console.log(judge_url);
+
+            // 2. make json based on HTTP, send request to backend by ajax
+            $.ajax({
+                method: 'Post',
+                url: judge_url,
+                dataType: 'json',
+                contentType: 'application/json; charset=utf-8',
+                data: JSON.stringify({
+                    'code': code,
+                    'input': ''
+                }),
+                success: function (data) {
+                    // console.log(data);
+                    show_result(data);
+                }
+            });
+
+            // 3. get result, show it on browser
+            function show_result(data) {
+                // console.log(data.status);
+                // console.log(data.reason);
+                var result_div = $(".container .interact .result");
+                result_div.empty(); //dump last result
+
+                var _status = data.status;
+                var _reason = data.reason;
+
+                var reason_label = $("<h3>", {
+                    text: _reason
+                });
+                reason_label.appendTo(result_div);
+
+                if (_status == 0) {
+                    // only compile and run success
+                    var _stdout = data.stdout;
+                    var _stderr = data.stderr;
+
+                    var stdout_label = $("<pre>", {
+                        text: _stdout
+                    });
+
+                    var stderr_label = $("<pre>", {
+                        text: _stderr
+                    });
+
+                    stdout_label.appendTo(result_div);
+                    stderr_label.appendTo(result_div);
+                }
+                else {
+                    // compile failed, do nothing
+                }
+            }
+        }
+
+
+    </script>
+</body>
+
+</html>
