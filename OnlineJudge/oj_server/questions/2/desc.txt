@@ -1,7 +1,0 @@
-Find the max element in a vector and return this value
-
-Example 1:
-
-Input: vector v = {1,2,3,4,5,6,12,3,4,-1}
-Output: 12
-Explanation: 12 is the maximum element in v.
