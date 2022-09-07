@@ -6,7 +6,7 @@ Load balancing OnlineJudge platform.
 
 🍏comm: common block for common tools used in other blocks.                                        
 🍊compile_server: compiling and running block.                                                 
-🍉oj_server: Using MVC structure. getting problems list, checking problems, coding, load balancing and other!\n
+🍉oj_server: Using MVC structure. getting problems list, checking problems, coding, load balancing and other!
 
 
 👀becuase this program is deployed on my Virtual Machine, and I haven't provided a public IP address to it, so I'm very sorry you can't try the service by yourself right now.
